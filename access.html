@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Numa — Confirmar compra</title>
+<style>
+  :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#050816;color:#fff;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.card{width:min(440px,100%);padding:34px;border:1px solid rgba(47,143,255,.28);border-radius:24px;background:rgba(10,18,44,.92);box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 30px rgba(47,143,255,.1)}.lock{font-size:42px;margin-bottom:14px}.logo{font-weight:800;font-size:15px;letter-spacing:.08em;color:#5eb3ff;margin-bottom:18px}.title{font-size:30px;line-height:1.1;margin:0 0 12px}.text{color:#aebbd5;line-height:1.55;margin:0 0 24px}label{display:block;font-size:13px;font-weight:700;margin-bottom:8px}input{width:100%;padding:15px 16px;border-radius:13px;border:1px solid #203967;background:#07102a;color:#fff;font-size:16px;outline:none}input:focus{border-color:#2f8fff;box-shadow:0 0 0 3px rgba(47,143,255,.15)}button{width:100%;margin-top:14px;padding:15px;border:0;border-radius:13px;background:#2f8fff;color:#fff;font-size:16px;font-weight:800;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.error{min-height:22px;margin-top:12px;color:#ff7373;font-size:14px}.hint{margin-top:18px;color:#7183a4;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="lock">🔐</div>
+  <div class="logo">NUMA</div>
+  <h1 class="title">Confirme sua compra</h1>
+  <p class="text">Digite o mesmo e-mail usado na compra para liberar o Numa.</p>
+  <form id="form">
+    <label for="email">E-mail da compra</label>
+    <input id="email" type="email" autocomplete="email" placeholder="seu@email.com" required>
+    <button id="button" type="submit">Liberar acesso</button>
+    <div id="error" class="error" role="alert"></div>
+  </form>
+  <div class="hint">Seu e-mail é usado somente para verificar sua compra.</div>
+</main>
+<script>
+const ENDPOINT="https://dravix-member-portal.vercel.app/api/check-purchase";
+const form=document.getElementById("form"),email=document.getElementById("email"),button=document.getElementById("button"),error=document.getElementById("error");
+form.addEventListener("submit",async e=>{
+  e.preventDefault(); error.textContent=""; button.disabled=true; button.textContent="Verificando...";
+  const value=email.value.trim().toLowerCase();
+  try{
+    const response=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:value})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok || data.entitled!==true){throw new Error(data.message||"Não encontramos uma compra ativa para este e-mail.");}
+    document.cookie="numa_access_email="+encodeURIComponent(value)+"; Path=/; Max-Age=2592000; SameSite=Lax; Secure";
+    window.location.replace("/");
+  }catch(err){
+    error.textContent=err.message||"Não foi possível verificar sua compra.";
+    button.disabled=false; button.textContent="Liberar acesso";
+  }
+});
+</script>
+</body>
+</html>
