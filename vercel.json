@@ -5,7 +5,7 @@
   "routes": [
     { "src": "/access.html", "dest": "/access.html" },
     { "src": "/favicon.ico", "dest": "/favicon.ico" },
-    { "src": "/api/gate", "dest": "/api/gate.js" },
-    { "src": "/(.*)", "dest": "/api/gate.js" }
+    { "src": "/api/gate", "dest": "/api/gate" },
+    { "src": "/(.*)", "dest": "/api/gate" }
   ]
 }
