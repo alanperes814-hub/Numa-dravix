@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Numa — Controle Financeiro</title>
+<meta name="description" content="Organize suas finanças com clareza. Numa é o app que te ajuda a entender para onde vai o seu dinheiro." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("numa-theme");
+      var theme = saved === "light" || saved === "dark" ? saved : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    } catch (e) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  })();
+
+  tailwind.config = {
+    darkMode: ["selector", '[data-theme="dark"]'],
+    theme: {
+      extend: {
+        colors: {
+          base: {
+            950: "rgb(var(--base-950) / <alpha-value>)",
+            900: "rgb(var(--base-900) / <alpha-value>)",
+            850: "rgb(var(--base-850) / <alpha-value>)",
+            800: "rgb(var(--base-800) / <alpha-value>)",
+            700: "rgb(var(--base-700) / <alpha-value>)",
+            600: "rgb(var(--base-600) / <alpha-value>)",
+          },
+          ink: "rgb(var(--ink) / <alpha-value>)",
+          neon: { 300: "#8fc9ff", 400: "#5eb3ff", 500: "#2f8fff", 600: "#1d6fe0", 700: "#155ac2" },
+          success: "#22c55e",
+          danger: "#ef4444",
+          warning: "#f59e0b",
+        },
+        fontFamily: {
+          display: ["Manrope", "-apple-system", "sans-serif"],
+          body: ["Inter", "-apple-system", "sans-serif"],
+        },
+        borderRadius: { xl2: "1.125rem" },
+        boxShadow: {
+          soft: "var(--shadow-soft)",
+          elevated: "var(--shadow-elevated)",
+          card: "var(--card-shadow)",
+          cta: "var(--glow-cta)",
+        },
+        keyframes: {
+          "fade-up": { "0%": { opacity: 0, transform: "translateY(8px)" }, "100%": { opacity: 1, transform: "translateY(0)" } },
+        },
+        animation: { "fade-up": "fade-up 0.35s cubic-bezier(0.22,1,0.36,1) both" },
+        transitionTimingFunction: { apple: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      },
+    },
+  };
+</script>
+
+<style>
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --base-950: 4 8 22; --base-900: 7 13 34; --base-850: 10 18 44; --base-800: 15 26 58; --base-700: 22 37 78; --base-600: 32 52 102;
+    --ink: 255 255 255;
+    --glow-ring: 47 143 255;
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / .3), 0 2px 8px rgb(0 0 0 / .24);
+    --shadow-elevated: 0 8px 24px rgb(0 0 0 / .45), 0 2px 6px rgb(0 0 0 / .35), 0 0 0 1px rgb(47 143 255 / .24);
+    --card-shadow: 0 1px 0 rgb(255 255 255 / .03) inset, 0 1px 2px rgb(0 0 0 / .25), 0 0 0 1px rgb(47 143 255 / .18), 0 0 24px rgb(47 143 255 / .08);
+    --glow-cta: 0 1px 2px rgb(0 0 0 / .3), 0 0 0 1px rgb(47 143 255 / .3), 0 6px 18px rgb(47 143 255 / .32);
+    --page-gradient: radial-gradient(ellipse 90% 55% at 50% -10%, rgb(47 143 255 / .20), transparent 62%), radial-gradient(ellipse 70% 40% at 100% 0%, rgb(47 143 255 / .12), transparent 60%);
+  }
+  [data-theme="light"] {
+    color-scheme: light;
+    --base-950: 255 255 255; --base-900: 244 248 255; --base-850: 255 255 255; --base-800: 232 240 253; --base-700: 216 228 250; --base-600: 194 213 246;
+    --ink: 12 18 36;
+    --glow-ring: 29 111 224;
+    --shadow-soft: 0 1px 2px rgb(15 23 42 / .06), 0 1px 3px rgb(15 23 42 / .08);
+    --shadow-elevated: 0 12px 28px rgb(15 23 42 / .10), 0 2px 8px rgb(15 23 42 / .06);
+    --card-shadow: 0 1px 0 rgb(255 255 255 / .8) inset, 0 1px 2px rgb(15 23 42 / .04), 0 0 0 1px rgb(29 111 224 / .08);
+    --glow-cta: 0 1px 2px rgb(15 23 42 / .08), 0 6px 16px rgb(29 111 224 / .26);
+    --page-gradient: radial-gradient(ellipse 90% 55% at 50% -10%, rgb(47 143 255 / .12), transparent 62%), radial-gradient(ellipse 70% 40% at 100% 0%, rgb(29 111 224 / .08), transparent 60%);
+  }
+  html, body { height: 100%; }
+  body {
+    background-color: rgb(var(--base-950));
+    color: rgb(var(--ink));
+    background-image: var(--page-gradient);
+    background-attachment: fixed;
+    transition: background-color .25s ease, color .25s ease;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { scrollbar-color: rgb(var(--base-600)) transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--base-600)); border-radius: 999px; }
+  :focus-visible { outline: 2px solid rgb(var(--glow-ring) / .6); outline-offset: 2px; border-radius: 6px; }
+  .numa-modal-backdrop { animation: fadeIn .2s ease both; }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  svg.icon { display: inline-block; vertical-align: middle; }
+</style>
+</head>
+<body class="font-body antialiased">
+
+<div id="toast-root" class="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 sm:bottom-6 sm:right-6"></div>
+<div id="modal-root"></div>
+<div id="app"></div>
+
+<script>
+/* ============================================================================
+   NUMA — app financeiro pessoal, 100% autocontido.
+   Sem servidor, sem login: os dados ficam salvos no localStorage deste
+   navegador. Para levar os dados pra outro dispositivo, use "Exportar dados"
+   no Perfil e depois "Importar dados" no outro navegador.
+   ============================================================================ */
+
+const STORAGE_KEY = "numa-data-v1";
+const DEFAULT_CATEGORIES = [
+  { id: "cat-alimentacao", name: "Alimentação", kind: "despesa", color: "#f59e0b" },
+  { id: "cat-transporte", name: "Transporte", kind: "despesa", color: "#60a5fa" },
+  { id: "cat-moradia", name: "Moradia", kind: "despesa", color: "#a78bfa" },
+  { id: "cat-saude", name: "Saúde", kind: "despesa", color: "#ef4444" },
+  { id: "cat-educacao", name: "Educação", kind: "despesa", color: "#34d399" },
+  { id: "cat-entretenimento", name: "Entretenimento", kind: "despesa", color: "#f472b6" },
+  { id: "cat-compras", name: "Compras", kind: "despesa", color: "#fb923c" },
+  { id: "cat-assinaturas", name: "Assinaturas", kind: "despesa", color: "#818cf8" },
+  { id: "cat-investimentos-d", name: "Investimentos", kind: "despesa", color: "#22c55e" },
+  { id: "cat-outros-d", name: "Outros", kind: "despesa", color: "#94a3b8" },
+  { id: "cat-salario", name: "Salário", kind: "receita", color: "#22c55e" },
+  { id: "cat-freelance", name: "Freelance", kind: "receita", color: "#2f8fff" },
+  { id: "cat-vendas", name: "Vendas", kind: "receita", color: "#f59e0b" },
+  { id: "cat-outros-r", name: "Outros", kind: "receita", color: "#94a3b8" },
+];
+
+/* ============================================================================
+   ÍCONES — sistema próprio em SVG (sem emojis), estilo linha, 2px stroke.
+   ============================================================================ */
+const ICON_PATHS = {
+  home: '<path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/>',
+  swap: '<path d="M4 7h13"/><path d="M14 4l3 3-3 3"/><path d="M20 17H7"/><path d="M10 20l-3-3 3-3"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+  landmark: '<path d="M3 10 12 4l9 6"/><path d="M5 10v9"/><path d="M9.5 10v9"/><path d="M14.5 10v9"/><path d="M19 10v9"/><path d="M3 21h18"/>',
+  repeat: '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+  card: '<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>',
+  wallet: '<path d="M4 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/><path d="M16 12h3"/>',
+  cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>',
+  up: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+  down: '<path d="M3 7l6 6 4-4 8 8"/><path d="M14 17h7v-7"/>',
+  percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="7" cy="7" r="2.3" fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="2.3" fill="currentColor" stroke="none"/>',
+  check: '<polyline points="4 12 9 17 20 6"/>',
+  x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+  info: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>',
+  power: '<path d="M12 2v8"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/>',
+  download: '<path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/>',
+  upload: '<path d="M12 21V9"/><polyline points="7 13 12 8 17 13"/><path d="M5 3h14"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8.5 8.5 0 1 1 10.5 4a7 7 0 0 0 9.5 10.5z"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  search: '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+};
+function icon(name, size) {
+  size = size || 18;
+  return '<svg class="icon" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICON_PATHS[name] || "") + '</svg>';
+}
+
+function uid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* dados corrompidos — recomeça do zero */ }
+  return {
+    profile: { name: "" },
+    accounts: [],
+    categories: DEFAULT_CATEGORIES,
+    transactions: [],
+    goals: [],
+    recurring: [],
+    cards: [],
+  };
+}
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+}
+
+/* ============================================================================
+   ESTADO GLOBAL
+   ============================================================================ */
+const state = {
+  view: "dashboard",
+  range: "mes",
+  filters: { search: "", type: "todos", categoryId: "todas", accountId: "todas" },
+  data: loadData(),
+};
+
+let financeChartInstance = null;
+let categoryChartInstance = null;
+
+/* ============================================================================
+   UTILITÁRIOS
+   ============================================================================ */
+function formatCurrency(v) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
+}
+function formatDate(dateStr) {
+  const d = new Date(dateStr + (dateStr.length === 10 ? "T12:00:00" : ""));
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(d);
+}
+function formatDateLong(dateStr) {
+  const d = new Date(dateStr + (dateStr.length === 10 ? "T12:00:00" : ""));
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
+}
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function startOfRangeISO(range) {
+  const now = new Date(); const d = new Date(now);
+  if (range === "7d") d.setDate(now.getDate() - 7);
+  else if (range === "mes") d.setDate(1);
+  else if (range === "3m") d.setMonth(now.getMonth() - 3);
+  else if (range === "6m") d.setMonth(now.getMonth() - 6);
+  else if (range === "1a") d.setFullYear(now.getFullYear() - 1);
+  return d.toISOString().slice(0, 10);
+}
+function initials(name) {
+  if (!name) return "EU";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function esc1(str) { return String(str || "").replace(/'/g, "\\'"); }
+function isDark() { return document.documentElement.getAttribute("data-theme") === "dark"; }
+
+/* ============================================================================
+   TOASTS
+   ============================================================================ */
+function toast(message, kind = "success") {
+  const root = document.getElementById("toast-root");
+  const el = document.createElement("div");
+  const iconName = kind === "success" ? "check" : kind === "error" ? "x" : "info";
+  const color = kind === "success" ? "text-success" : kind === "error" ? "text-danger" : "text-neon-500";
+  el.className = "animate-fade-up flex items-center gap-3 rounded-xl border border-base-600 bg-base-850 px-4 py-3 shadow-elevated";
+  el.innerHTML = '<span class="' + color + '">' + icon(iconName, 16) + '</span><p class="font-body text-sm text-ink/90">' + escapeHtml(message) + '</p><button class="ml-1 text-ink/40 hover:text-ink/80" onclick="this.parentElement.remove()">' + icon("x", 14) + '</button>';
+  root.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+/* ============================================================================
+   TEMA
+   ============================================================================ */
+function toggleTheme() {
+  const next = isDark() ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("numa-theme", next);
+  renderApp();
+}
+
+/* ============================================================================
+   CLASSES REUTILIZÁVEIS
+   ============================================================================ */
+const CLS = {
+  card: "rounded-xl2 border border-base-700/70 bg-base-850 shadow-card",
+  cardHover: "transition-shadow duration-300 ease-apple hover:shadow-elevated",
+  btnPrimary: "inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-neon-400 to-neon-600 px-5 py-2.5 font-display font-semibold text-white shadow-cta transition-all duration-200 ease-apple hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed",
+  btnSecondary: "inline-flex items-center justify-center gap-2 rounded-xl border border-base-600 bg-base-850 px-5 py-2.5 font-display font-semibold text-ink/85 shadow-soft transition-all duration-200 ease-apple hover:bg-base-800 active:scale-[0.98]",
+  btnGhost: "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-display font-medium text-ink/55 transition-colors hover:bg-base-800 hover:text-ink",
+  btnDanger: "inline-flex items-center justify-center gap-2 rounded-xl bg-danger px-5 py-2.5 font-display font-semibold text-white shadow-soft transition-all hover:brightness-110 active:scale-[0.98]",
+  input: "w-full rounded-xl border border-base-600 bg-base-900 px-4 py-3 font-body text-sm text-ink placeholder:text-ink/30 transition-colors focus:border-neon-500 focus:outline-none",
+  label: "mb-1.5 block font-body text-xs font-medium uppercase tracking-wide text-ink/45",
+  iconBtn: "rounded-lg p-1.5 text-ink/35 hover:bg-base-800 hover:text-ink",
+  iconBtnDanger: "rounded-lg p-1.5 text-ink/35 hover:bg-base-800 hover:text-danger",
+};
+
+/* ============================================================================
+   MODAL — sistema genérico
+   ============================================================================ */
+function openModal(html) {
+  document.getElementById("modal-root").innerHTML = `
+    <div class="numa-modal-backdrop fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true">
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
+      <div class="animate-fade-up ${CLS.card} relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-b-none p-6 sm:rounded-b-xl2 sm:p-8">
+        ${html}
+      </div>
+    </div>`;
+}
+function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
+function modalHeader(title) {
+  return `<div class="mb-6 flex items-center justify-between"><h2 class="font-display text-lg font-bold">${escapeHtml(title)}</h2>
+    <button onclick="closeModal()" class="rounded-lg p-1.5 text-ink/50 hover:bg-base-800 hover:text-ink" aria-label="Fechar">${icon("x", 16)}</button></div>`;
+}
+function formError(msg) {
+  return msg ? `<p role="alert" class="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 font-body text-sm text-danger">${escapeHtml(msg)}</p>` : "";
+}
+function confirmDialog(title, description, onConfirmFn) {
+  window.__confirmAction = onConfirmFn;
+  openModal(`
+    ${modalHeader(title)}
+    <p class="mb-6 font-body text-sm text-ink/60">${escapeHtml(description)}</p>
+    <div class="flex justify-end gap-3">
+      <button class="${CLS.btnGhost}" onclick="closeModal()">Cancelar</button>
+      <button class="${CLS.btnDanger}" onclick="window.__confirmAction(); closeModal();">Excluir</button>
+    </div>`);
+}
+
+/* ============================================================================
+   MODAL — MOVIMENTAÇÃO
+   ============================================================================ */
+function openTransactionModal(editId) {
+  const editing = editId ? state.data.transactions.find(t => t.id === editId) : null;
+  render(editing?.type || "despesa");
+
+  function render(currentType) {
+    const cats = state.data.categories.filter(c => c.kind === currentType);
+    openModal(`
+      ${modalHeader(editing ? "Editar movimentação" : "Nova movimentação")}
+      <form onsubmit="submitTransactionForm(event, ${editing ? `'${editing.id}'` : "null"})" class="space-y-4">
+        <input type="hidden" name="type" value="${currentType}" />
+        <div class="grid grid-cols-2 gap-2 rounded-xl border border-base-600 bg-base-900 p-1">
+          <button type="button" onclick="render('despesa')" class="rounded-lg py-2 font-body text-sm font-medium transition-colors ${currentType === "despesa" ? "bg-danger text-white" : "text-ink/50"}">Despesa</button>
+          <button type="button" onclick="render('receita')" class="rounded-lg py-2 font-body text-sm font-medium transition-colors ${currentType === "receita" ? "bg-success text-white" : "text-ink/50"}">Receita</button>
+        </div>
+        <div><label class="${CLS.label}">Valor (R$)</label>
+          <input name="amount" required inputmode="decimal" class="${CLS.input}" placeholder="0,00" value="${editing ? editing.amount : ""}" /></div>
+        <div><label class="${CLS.label}">Descrição</label>
+          <input name="description" required class="${CLS.input}" placeholder="${currentType === "receita" ? "Ex: Salário" : "Ex: Supermercado"}" value="${escapeHtml(editing?.description || "")}" /></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="${CLS.label}">Categoria</label>
+            <select name="category_id" class="${CLS.input}">
+              <option value="">Sem categoria</option>
+              ${cats.map(c => `<option value="${c.id}" ${editing?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
+            </select></div>
+          <div><label class="${CLS.label}">Data</label>
+            <input type="date" name="occurred_on" required class="${CLS.input}" value="${editing?.occurred_on || todayISO()}" /></div>
+        </div>
+        <div><label class="${CLS.label}">Conta</label>
+          <select name="account_id" class="${CLS.input}">
+            <option value="">Sem conta</option>
+            ${state.data.accounts.map(a => `<option value="${a.id}" ${editing?.account_id === a.id ? "selected" : ""}>${escapeHtml(a.name)}</option>`).join("")}
+          </select></div>
+        <div><label class="${CLS.label}">Observação (opcional)</label>
+          <textarea name="note" rows="2" class="${CLS.input} resize-none">${escapeHtml(editing?.note || "")}</textarea></div>
+        <div id="tx-form-error"></div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" class="${CLS.btnGhost}" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="${CLS.btnPrimary}">Salvar</button>
+        </div>
+      </form>`);
+  }
+}
+function submitTransactionForm(ev, editId) {
+  ev.preventDefault();
+  const f = ev.target;
+  const amount = Number(f.amount.value.replace(",", "."));
+  const description = f.description.value.trim();
+  const errBox = document.getElementById("tx-form-error");
+  if (!amount || amount <= 0) { errBox.innerHTML = formError("Informe um valor válido, maior que zero."); return; }
+  if (!description) { errBox.innerHTML = formError("Adicione uma descrição."); return; }
+
+  const payload = {
+    type: f.type.value, amount, description,
+    category_id: f.category_id.value || null,
+    account_id: f.account_id.value || null,
+    occurred_on: f.occurred_on.value,
+    note: f.note.value.trim() || null,
+  };
+  if (editId) {
+    const t = state.data.transactions.find(t => t.id === editId);
+    Object.assign(t, payload);
+  } else {
+    state.data.transactions.unshift({ id: uid(), created_at: new Date().toISOString(), ...payload });
+  }
+  saveData();
+  toast(editId ? "Movimentação atualizada." : (payload.type === "receita" ? "Receita adicionada com sucesso." : "Despesa adicionada com sucesso."));
+  closeModal();
+  renderApp();
+}
+function confirmDeleteTransaction(id, description) {
+  confirmDialog("Excluir movimentação", `Tem certeza que deseja excluir "${description}"? Essa ação não pode ser desfeita.`, () => {
+    state.data.transactions = state.data.transactions.filter(t => t.id !== id);
+    saveData();
+    toast("Movimentação excluída.");
+    renderApp();
+  });
+}
+
+/* ============================================================================
+   MODAL — CONTA
+   ============================================================================ */
+const ACCOUNT_TYPES = [
+  { value: "dinheiro", label: "Dinheiro" }, { value: "banco", label: "Conta bancária" },
+  { value: "cartao", label: "Cartão" }, { value: "carteira", label: "Carteira digital" }, { value: "investimentos", label: "Investimentos" },
+];
+function openAccountModal(editId) {
+  const editing = editId ? state.data.accounts.find(a => a.id === editId) : null;
+  openModal(`
+    ${modalHeader(editing ? "Editar conta" : "Nova conta")}
+    <form onsubmit="submitAccountForm(event, ${editing ? `'${editing.id}'` : "null"})" class="space-y-4">
+      <div><label class="${CLS.label}">Nome</label><input name="name" required class="${CLS.input}" placeholder="Ex: Nubank" value="${escapeHtml(editing?.name || "")}" /></div>
+      <div><label class="${CLS.label}">Tipo</label>
+        <select name="type" class="${CLS.input}">
+          ${ACCOUNT_TYPES.map(t => `<option value="${t.value}" ${editing?.type === t.value ? "selected" : ""}>${t.label}</option>`).join("")}
+        </select></div>
+      <div><label class="${CLS.label}">Saldo atual (R$)</label><input name="initial_balance" inputmode="decimal" class="${CLS.input}" placeholder="0,00" value="${editing?.initial_balance ?? ""}" /></div>
+      <div><label class="${CLS.label}">Descrição (opcional)</label><input name="description" class="${CLS.input}" value="${escapeHtml(editing?.description || "")}" /></div>
+      <div id="acc-form-error"></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" class="${CLS.btnGhost}" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="${CLS.btnPrimary}">Salvar</button>
+      </div>
+    </form>`);
+}
+function submitAccountForm(ev, editId) {
+  ev.preventDefault();
+  const f = ev.target;
+  const name = f.name.value.trim();
+  const errBox = document.getElementById("acc-form-error");
+  if (!name) { errBox.innerHTML = formError("Dê um nome para a conta."); return; }
+  const payload = { name, type: f.type.value, initial_balance: Number(f.initial_balance.value.replace(",", ".") || "0"), description: f.description.value.trim() || null };
+  if (editId) Object.assign(state.data.accounts.find(a => a.id === editId), payload);
+  else state.data.accounts.push({ id: uid(), ...payload });
+  saveData();
+  toast(editId ? "Conta atualizada." : "Conta criada com sucesso.");
+  closeModal();
+  renderApp();
+}
+function confirmDeleteAccount(id, name) {
+  confirmDialog("Excluir conta", `Tem certeza que deseja excluir "${name}"? As movimentações vinculadas não serão apagadas, mas ficarão sem conta.`, () => {
+    state.data.accounts = state.data.accounts.filter(a => a.id !== id);
+    state.data.transactions.forEach(t => { if (t.account_id === id) t.account_id = null; });
+    saveData();
+    toast("Conta excluída.");
+    renderApp();
+  });
+}
+
+/* ============================================================================
+   MODAL — META
+   ============================================================================ */
+function openGoalModal(editId) {
+  const editing = editId ? state.data.goals.find(g => g.id === editId) : null;
+  openModal(`
+    ${modalHeader(editing ? "Editar meta" : "Nova meta")}
+    <form onsubmit="submitGoalForm(event, ${editing ? `'${editing.id}'` : "null"})" class="space-y-4">
+      <div><label class="${CLS.label}">Nome da meta</label><input name="name" required class="${CLS.input}" placeholder="Ex: Comprar um carro" value="${escapeHtml(editing?.name || "")}" /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="${CLS.label}">Valor alvo (R$)</label><input name="target_amount" required inputmode="decimal" class="${CLS.input}" placeholder="50.000" value="${editing?.target_amount ?? ""}" /></div>
+        <div><label class="${CLS.label}">Já economizado (R$)</label><input name="current_amount" inputmode="decimal" class="${CLS.input}" placeholder="0" value="${editing?.current_amount ?? ""}" /></div>
+      </div>
+      <div><label class="${CLS.label}">Prazo (opcional)</label><input type="date" name="due_date" class="${CLS.input}" value="${editing?.due_date || ""}" /></div>
+      <div id="goal-form-error"></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" class="${CLS.btnGhost}" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="${CLS.btnPrimary}">Salvar</button>
+      </div>
+    </form>`);
+}
+function submitGoalForm(ev, editId) {
+  ev.preventDefault();
+  const f = ev.target;
+  const name = f.name.value.trim();
+  const target = Number(f.target_amount.value.replace(",", "."));
+  const errBox = document.getElementById("goal-form-error");
+  if (!name) { errBox.innerHTML = formError("Dê um nome para a sua meta."); return; }
+  if (!target || target <= 0) { errBox.innerHTML = formError("Informe um valor alvo válido."); return; }
+  const payload = { name, target_amount: target, current_amount: Number(f.current_amount.value.replace(",", ".") || "0"), due_date: f.due_date.value || null };
+  if (editId) Object.assign(state.data.goals.find(g => g.id === editId), payload);
+  else state.data.goals.unshift({ id: uid(), ...payload });
+  saveData();
+  toast(editId ? "Meta atualizada." : "Meta criada com sucesso.");
+  closeModal();
+  renderApp();
+}
+function openAddToGoalModal(goalId) {
+  const goal = state.data.goals.find(g => g.id === goalId);
+  openModal(`
+    ${modalHeader(`Adicionar a "${escapeHtml(goal.name)}"`)}
+    <form onsubmit="submitAddToGoal(event, '${goalId}')" class="space-y-4">
+      <div><label class="${CLS.label}">Valor a adicionar (R$)</label><input name="amount" required autofocus inputmode="decimal" class="${CLS.input}" placeholder="0,00" /></div>
+      <div id="add-goal-error"></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" class="${CLS.btnGhost}" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="${CLS.btnPrimary}">Adicionar</button>
+      </div>
+    </form>`);
+}
+function submitAddToGoal(ev, goalId) {
+  ev.preventDefault();
+  const value = Number(ev.target.amount.value.replace(",", "."));
+  const errBox = document.getElementById("add-goal-error");
+  if (!value || value <= 0) { errBox.innerHTML = formError("Informe um valor válido."); return; }
+  const goal = state.data.goals.find(g => g.id === goalId);
+  goal.current_amount = Number(goal.current_amount) + value;
+  saveData();
+  toast("Meta atualizada.");
+  closeModal();
+  renderApp();
+}
+function confirmDeleteGoal(id, name) {
+  confirmDialog("Excluir meta", `Tem certeza que deseja excluir "${name}"? Essa ação não pode ser desfeita.`, () => {
+    state.data.goals = state.data.goals.filter(g => g.id !== id);
+    saveData();
+    toast("Meta excluída.");
+    renderApp();
+  });
+}
+
+/* ============================================================================
+   MODAL — RECORRÊNCIA
+   ============================================================================ */
+function openRecurringModal(editId) {
+  const editing = editId ? state.data.recurring.find(r => r.id === editId) : null;
+  const cats = state.data.categories.filter(c => c.kind === "despesa");
+  openModal(`
+    ${modalHeader(editing ? "Editar recorrência" : "Nova despesa recorrente")}
+    <form onsubmit="submitRecurringForm(event, ${editing ? `'${editing.id}'` : "null"})" class="space-y-4">
+      <div><label class="${CLS.label}">Nome</label><input name="name" required class="${CLS.input}" placeholder="Ex: Netflix" value="${escapeHtml(editing?.name || "")}" /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="${CLS.label}">Valor (R$)</label><input name="amount" required inputmode="decimal" class="${CLS.input}" placeholder="0,00" value="${editing?.amount ?? ""}" /></div>
+        <div><label class="${CLS.label}">Frequência</label>
+          <select name="frequency" class="${CLS.input}">
+            <option value="semanal" ${editing?.frequency === "semanal" ? "selected" : ""}>Semanal</option>
+            <option value="mensal" ${!editing || editing?.frequency === "mensal" ? "selected" : ""}>Mensal</option>
+            <option value="anual" ${editing?.frequency === "anual" ? "selected" : ""}>Anual</option>
+          </select></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="${CLS.label}">Categoria</label>
+          <select name="category_id" class="${CLS.input}">
+            <option value="">Sem categoria</option>
+            ${cats.map(c => `<option value="${c.id}" ${editing?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
+          </select></div>
+        <div><label class="${CLS.label}">Próxima cobrança</label><input type="date" name="next_charge_date" required class="${CLS.input}" value="${editing?.next_charge_date || todayISO()}" /></div>
+      </div>
+      <div id="rec-form-error"></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" class="${CLS.btnGhost}" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="${CLS.btnPrimary}">Salvar</button>
+      </div>
+    </form>`);
+}
+function submitRecurringForm(ev, editId) {
+  ev.preventDefault();
+  const f = ev.target;
+  const name = f.name.value.trim();
+  const amount = Number(f.amount.value.replace(",", "."));
+  const errBox = document.getElementById("rec-form-error");
+  if (!name) { errBox.innerHTML = formError("Dê um nome para a despesa recorrente."); return; }
+  if (!amount || amount <= 0) { errBox.innerHTML = formError("Informe um valor válido."); return; }
+  const payload = { name, amount, category_id: f.category_id.value || null, frequency: f.frequency.value, next_charge_date: f.next_charge_date.value };
+  if (editId) Object.assign(state.data.recurring.find(r => r.id === editId), payload);
+  else state.data.recurring.push({ id: uid(), active: true, ...payload });
+  saveData();
+  toast(editId ? "Despesa recorrente atualizada." : "Despesa recorrente criada.");
+  closeModal();
+  renderApp();
+}
+function toggleRecurringActive(id) {
+  const r = state.data.recurring.find(r => r.id === id);
+  r.active = !r.active;
+  saveData();
+  renderApp();
+}
+function confirmDeleteRecurring(id, name) {
+  confirmDialog("Excluir recorrência", `Tem certeza que deseja excluir "${name}"? Essa ação não pode ser desfeita.`, () => {
+    state.data.recurring = state.data.recurring.filter(r => r.id !== id);
+    saveData();
+    toast("Despesa recorrente excluída.");
+    renderApp();
+  });
+}
+
+/* ============================================================================
+   MODAL — CARTÃO
+   ============================================================================ */
+const CARD_COLORS = ["#2f8fff", "#a78bfa", "#f472b6", "#34d399", "#f59e0b", "#ef4444"];
+function openCardModal(editId) {
+  const editing = editId ? state.data.cards.find(c => c.id === editId) : null;
+  render(editing?.color || CARD_COLORS[0]);
+
+  function render(color) {
+    openModal(`
+      ${modalHeader(editing ? "Editar cartão" : "Novo cartão")}
+      <form onsubmit="submitCardForm(event, ${editing ? `'${editing.id}'` : "null"})" class="space-y-4">
+        <input type="hidden" name="color" value="${color}" />
+        <div><label class="${CLS.label}">Nome do cartão</label><input name="name" required class="${CLS.input}" placeholder="Ex: Nubank Ultravioleta" value="${escapeHtml(editing?.name || "")}" /></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="${CLS.label}">Limite total (R$)</label><input name="limit_amount" required inputmode="decimal" class="${CLS.input}" placeholder="5.000" value="${editing?.limit_amount ?? ""}" /></div>
+          <div><label class="${CLS.label}">Limite usado (R$)</label><input name="used_amount" inputmode="decimal" class="${CLS.input}" placeholder="0" value="${editing?.used_amount ?? ""}" /></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="${CLS.label}">Dia de fechamento</label><input type="number" name="closing_day" min="1" max="31" required class="${CLS.input}" value="${editing?.closing_day ?? 1}" /></div>
+          <div><label class="${CLS.label}">Dia de vencimento</label><input type="number" name="due_day" min="1" max="31" required class="${CLS.input}" value="${editing?.due_day ?? 10}" /></div>
+        </div>
+        <div><span class="${CLS.label}">Cor</span>
+          <div class="flex gap-2">
+            ${CARD_COLORS.map(c => `<button type="button" onclick="render('${c}')" class="h-8 w-8 rounded-full" style="background:${c}; outline:${c === color ? "2px solid rgb(var(--ink))" : "none"}; outline-offset:2px;"></button>`).join("")}
+          </div></div>
+        <div id="card-form-error"></div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" class="${CLS.btnGhost}" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="${CLS.btnPrimary}">Salvar</button>
+        </div>
+      </form>`);
+  }
+}
+function submitCardForm(ev, editId) {
+  ev.preventDefault();
+  const f = ev.target;
+  const name = f.name.value.trim();
+  const limit = Number(f.limit_amount.value.replace(",", "."));
+  const closing = Number(f.closing_day.value), due = Number(f.due_day.value);
+  const errBox = document.getElementById("card-form-error");
+  if (!name) { errBox.innerHTML = formError("Dê um nome para o cartão."); return; }
+  if (!limit || limit <= 0) { errBox.innerHTML = formError("Informe um limite válido."); return; }
+  if (closing < 1 || closing > 31 || due < 1 || due > 31) { errBox.innerHTML = formError("Os dias devem estar entre 1 e 31."); return; }
+  const payload = { name, limit_amount: limit, used_amount: Number(f.used_amount.value.replace(",", ".") || "0"), closing_day: closing, due_day: due, color: f.color.value };
+  if (editId) Object.assign(state.data.cards.find(c => c.id === editId), payload);
+  else state.data.cards.push({ id: uid(), ...payload });
+  saveData();
+  toast(editId ? "Cartão atualizado." : "Cartão adicionado.");
+  closeModal();
+  renderApp();
+}
+function confirmDeleteCard(id, name) {
+  confirmDialog("Excluir cartão", `Tem certeza que deseja excluir "${name}"? Essa ação não pode ser desfeita.`, () => {
+    state.data.cards = state.data.cards.filter(c => c.id !== id);
+    saveData();
+    toast("Cartão excluído.");
+    renderApp();
+  });
+}
+
+/* ============================================================================
+   PERFIL — nome, exportar/importar, resetar
+   ============================================================================ */
+function submitProfileForm(ev) {
+  ev.preventDefault();
+  state.data.profile.name = ev.target.name.value.trim();
+  saveData();
+  toast("Perfil atualizado.");
+  renderApp();
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "numa-backup-" + todayISO() + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast("Backup exportado.");
+}
+function triggerImport() { document.getElementById("import-file-input").click(); }
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.transactions)) throw new Error("Formato inválido.");
+      state.data = {
+        profile: parsed.profile || { name: "" },
+        accounts: parsed.accounts || [],
+        categories: parsed.categories || DEFAULT_CATEGORIES,
+        transactions: parsed.transactions || [],
+        goals: parsed.goals || [],
+        recurring: parsed.recurring || [],
+        cards: parsed.cards || [],
+      };
+      saveData();
+      toast("Dados importados com sucesso.");
+      renderApp();
+    } catch (e) {
+      toast("Não foi possível importar: arquivo inválido.", "error");
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = "";
+}
+function confirmResetData() {
+  confirmDialog("Apagar todos os dados", "Isso remove permanentemente todas as suas movimentações, contas, metas, cartões e recorrências deste navegador. Exporte um backup antes, se quiser guardar. Essa ação não pode ser desfeita.", () => {
+    state.data = { profile: { name: "" }, accounts: [], categories: DEFAULT_CATEGORIES, transactions: [], goals: [], recurring: [], cards: [] };
+    saveData();
+    toast("Todos os dados foram apagados.");
+    state.view = "dashboard";
+    renderApp();
+  });
+}
+
+/* ============================================================================
+   NAVEGAÇÃO
+   ============================================================================ */
+const NAV = [
+  { id: "dashboard", label: "Início", icon: "home" },
+  { id: "movimentacoes", label: "Movimentações", icon: "swap" },
+  { id: "metas", label: "Metas", icon: "target" },
+  { id: "contas", label: "Contas", icon: "landmark" },
+  { id: "recorrentes", label: "Recorrentes", icon: "repeat" },
+  { id: "cartoes", label: "Cartões", icon: "card" },
+  { id: "perfil", label: "Perfil", icon: "user" },
+];
+const MOBILE_NAV = ["dashboard", "movimentacoes", "metas", "contas", "perfil"];
+function goTo(view) { state.view = view; renderApp(); }
+
+/* ============================================================================
+   RENDER — ORQUESTRADOR
+   ============================================================================ */
+function renderApp() {
+  const root = document.getElementById("app");
+  root.innerHTML = renderShell();
+  if (state.view === "dashboard") setTimeout(renderCharts, 0);
+}
+
+function renderShell() {
+  const sidebar = `
+    <aside class="hidden w-64 shrink-0 flex-col border-r border-base-700/60 bg-base-900/60 px-4 py-6 lg:flex">
+      <div class="mb-8 flex items-center gap-2 px-2">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-b from-neon-400 to-neon-600 shadow-cta text-white">${icon("wallet", 18)}</div>
+        <span class="font-display text-lg font-bold">Numa</span>
+      </div>
+      <nav class="flex flex-1 flex-col gap-1">
+        ${NAV.map(n => `
+          <a href="#" onclick="goTo('${n.id}'); return false;" class="flex items-center gap-3 rounded-xl px-3 py-2.5 font-body text-sm font-medium transition-colors ${state.view === n.id ? "bg-neon-500/12 text-neon-600 shadow-[inset_0_0_0_1px_rgba(47,143,255,0.25)] dark:text-neon-400" : "text-ink/55 hover:bg-base-800 hover:text-ink"}">
+            ${icon(n.icon, 17)}${n.label}
+          </a>`).join("")}
+      </nav>
+      <div class="border-t border-base-700/60 pt-1">
+        <button onclick="toggleTheme()" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 font-body text-sm font-medium text-ink/55 hover:bg-base-800 hover:text-ink">
+          ${icon(isDark() ? "sun" : "moon", 17)}${isDark() ? "Tema claro" : "Tema escuro"}
+        </button>
+      </div>
+    </aside>`;
+
+  const mobileNav = `
+    <nav class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-base-700/60 bg-base-900/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+      ${MOBILE_NAV.map(id => {
+        const n = NAV.find(x => x.id === id);
+        return `<a href="#" onclick="goTo('${id}'); return false;" class="flex flex-1 flex-col items-center gap-1 py-2.5 font-body text-[11px] font-medium ${state.view === id ? "text-neon-600 dark:text-neon-400" : "text-ink/45"}">${icon(n.icon, 19)}${n.label}</a>`;
+      }).join("")}
+    </nav>`;
+
+  let content;
+  if (state.view === "dashboard") content = renderDashboard();
+  else if (state.view === "movimentacoes") content = renderMovimentacoes();
+  else if (state.view === "metas") content = renderMetas();
+  else if (state.view === "contas") content = renderContas();
+  else if (state.view === "recorrentes") content = renderRecorrentes();
+  else if (state.view === "cartoes") content = renderCartoes();
+  else if (state.view === "perfil") content = renderPerfil();
+
+  return `<div class="flex min-h-screen">${sidebar}<div class="flex-1"><main class="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:pb-10">${content}</main></div>${mobileNav}</div>`;
+}
+
+function pageHeader(title, subtitle) {
+  return `<header class="mb-6 flex items-center justify-between">
+    <div>
+      <span class="mb-1 block font-body text-[11px] font-semibold uppercase tracking-[0.14em] text-neon-600 dark:text-neon-400">Numa · Finanças</span>
+      <h1 class="font-display text-2xl font-bold sm:text-3xl">${escapeHtml(title)}</h1>${subtitle ? `<p class="mt-1 font-body text-sm text-ink/50">${subtitle}</p>` : ""}
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleTheme()" class="flex h-9 w-9 items-center justify-center rounded-full border border-base-600 bg-base-800 text-ink/60 lg:hidden" aria-label="Trocar tema">${icon(isDark() ? "sun" : "moon", 16)}</button>
+      <a href="#" onclick="goTo('perfil'); return false;" class="flex h-10 w-10 items-center justify-center rounded-full border border-base-600 bg-base-800 font-display text-xs font-bold text-ink/80 shadow-soft">${initials(state.data.profile.name)}</a>
+    </div>
+  </header>`;
+}
+
+function emptyState(iconName, title, description, actionLabel, actionFn) {
+  return `<div class="${CLS.card} flex flex-col items-center justify-center px-6 py-16 text-center">
+    <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-neon-500/10 text-neon-600 dark:text-neon-400">${icon(iconName, 24)}</div>
+    <h3 class="mb-1.5 font-display text-base font-bold">${escapeHtml(title)}</h3>
+    <p class="mb-6 max-w-xs font-body text-sm text-ink/50">${escapeHtml(description)}</p>
+    ${actionLabel ? `<button onclick="${actionFn}" class="${CLS.btnPrimary}">${icon("plus", 15)}${escapeHtml(actionLabel)}</button>` : ""}
+  </div>`;
+}
+
+/* ============================================================================
+   RENDER — DASHBOARD
+   ============================================================================ */
+const RANGE_LABELS = { "7d": "7 dias", mes: "Mês", "3m": "3 meses", "6m": "6 meses", "1a": "1 ano" };
+function txInRange() {
+  const from = startOfRangeISO(state.range), to = todayISO();
+  return state.data.transactions.filter(t => t.occurred_on >= from && t.occurred_on <= to);
+}
+function renderDashboard() {
+  const tx = txInRange();
+  const receitas = tx.filter(t => t.type === "receita").reduce((s, t) => s + Number(t.amount), 0);
+  const despesas = tx.filter(t => t.type === "despesa").reduce((s, t) => s + Number(t.amount), 0);
+  const economia = receitas - despesas;
+  const saldo = state.data.accounts.reduce((s, a) => s + Number(a.initial_balance), 0);
+
+  const tabs = Object.keys(RANGE_LABELS).map(r => `
+    <button onclick="setRange('${r}')" class="rounded-lg px-3 py-1.5 font-body text-xs font-medium transition-all ${state.range === r ? "bg-gradient-to-b from-neon-400 to-neon-600 text-white shadow-cta" : "text-ink/50 hover:text-ink"}">${RANGE_LABELS[r]}</button>`).join("");
+
+  const statCard = (label, value, iconName, tone) => `
+    <div class="${CLS.card} ${CLS.cardHover} p-5 sm:p-6">
+      <div class="mb-3 flex items-center justify-between">
+        <span class="font-body text-xs font-medium uppercase tracking-wide text-ink/45">${label}</span>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg ${tone === "positive" ? "bg-success/15 text-success" : tone === "negative" ? "bg-danger/15 text-danger" : "bg-neon-500/13 text-neon-600 dark:text-neon-400"}">${icon(iconName, 16)}</div>
+      </div>
+      <p class="font-display text-2xl font-bold sm:text-[1.7rem] ${tone === "positive" ? "text-success" : tone === "negative" ? "text-danger" : "text-ink"}">${formatCurrency(value)}</p>
+    </div>`;
+
+  const catTotals = {};
+  tx.filter(t => t.type === "despesa" && t.category_id).forEach(t => { catTotals[t.category_id] = (catTotals[t.category_id] || 0) + Number(t.amount); });
+  const hasCategoryData = Object.keys(catTotals).length > 0;
+  const welcomeName = state.data.profile.name ? `, ${state.data.profile.name.split(" ")[0]}` : "";
+
+  return `
+    ${pageHeader("Seu dinheiro" + welcomeName, "Uma visão clara de tudo que entra e sai.")}
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-wrap gap-1.5 rounded-xl border border-base-600 bg-base-900 p-1">${tabs}</div>
+      <button onclick="openTransactionModal()" class="${CLS.btnPrimary}">${icon("plus", 15)}Nova movimentação</button>
+    </div>
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      ${statCard("Saldo disponível", saldo, "wallet", "neutral")}
+      ${statCard("Receitas", receitas, "up", "positive")}
+      ${statCard("Despesas", despesas, "down", "negative")}
+      ${statCard("Economia", economia, "percent", economia >= 0 ? "positive" : "negative")}
+    </div>
+    <div class="${CLS.card} mt-6 p-5 sm:p-6">
+      <h2 class="mb-4 font-display text-base font-bold">Evolução financeira</h2>
+      ${tx.length === 0 ? emptyState("up", "Ainda não há movimentações", "Adicione uma receita ou despesa para ver sua evolução aqui.", "Adicionar movimentação", "openTransactionModal()") : `<div class="h-64 sm:h-72"><canvas id="finance-chart"></canvas></div>`}
+    </div>
+    ${hasCategoryData ? `<div class="${CLS.card} mt-6 p-5 sm:p-6"><h2 class="mb-4 font-display text-base font-bold">Gastos por categoria</h2><div class="h-64 sm:h-72"><canvas id="category-chart"></canvas></div></div>` : ""}
+  `;
+}
+function setRange(r) { state.range = r; renderApp(); }
+
+function renderCharts() {
+  const tx = txInRange();
+  if (tx.length === 0) return;
+  const gridColor = isDark() ? "#1b202f" : "#eaedf4";
+  const tickColor = isDark() ? "#ffffff88" : "#0f121c88";
+
+  const buckets = new Map();
+  [...tx].sort((a, b) => a.occurred_on.localeCompare(b.occurred_on)).forEach(t => {
+    const key = t.occurred_on.slice(5);
+    const b = buckets.get(key) || { receitas: 0, despesas: 0 };
+    if (t.type === "receita") b.receitas += Number(t.amount); else b.despesas += Number(t.amount);
+    buckets.set(key, b);
+  });
+  const labels = [...buckets.keys()];
+  const receitasData = labels.map(k => buckets.get(k).receitas);
+  const despesasData = labels.map(k => buckets.get(k).despesas);
+
+  const fcEl = document.getElementById("finance-chart");
+  if (fcEl) {
+    if (financeChartInstance) financeChartInstance.destroy();
+    financeChartInstance = new Chart(fcEl, {
+      type: "line",
+      data: { labels, datasets: [
+        { label: "Receitas", data: receitasData, borderColor: "#22c55e", backgroundColor: "#22c55e", tension: .35, pointRadius: 0, borderWidth: 2.5 },
+        { label: "Despesas", data: despesasData, borderColor: "#ef4444", backgroundColor: "#ef4444", tension: .35, pointRadius: 0, borderWidth: 2.5 },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: tickColor } } },
+        scales: {
+          x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
+          y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 }, callback: v => v >= 1000 ? (v/1000) + "k" : v } },
+        },
+      },
+    });
+  }
+
+  const catTotals = {};
+  tx.filter(t => t.type === "despesa" && t.category_id).forEach(t => { catTotals[t.category_id] = (catTotals[t.category_id] || 0) + Number(t.amount); });
+  const ccEl = document.getElementById("category-chart");
+  if (ccEl && Object.keys(catTotals).length > 0) {
+    const entries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+    const labels2 = entries.map(([id]) => state.data.categories.find(c => c.id === id)?.name || "Outros");
+    const colors2 = entries.map(([id]) => state.data.categories.find(c => c.id === id)?.color || "#94a3b8");
+    const values2 = entries.map(([, v]) => v);
+    if (categoryChartInstance) categoryChartInstance.destroy();
+    categoryChartInstance = new Chart(ccEl, {
+      type: "doughnut",
+      data: { labels: labels2, datasets: [{ data: values2, backgroundColor: colors2, borderColor: isDark() ? "#0a0d16" : "#ffffff", borderWidth: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: tickColor, boxWidth: 10, font: { size: 11 } } } } },
+    });
+  }
+}
+
+/* ============================================================================
+   RENDER — MOVIMENTAÇÕES
+   ============================================================================ */
+function filteredTransactions() {
+  const f = state.filters;
+  return state.data.transactions.filter(t => {
+    if (f.search && !t.description.toLowerCase().includes(f.search.toLowerCase())) return false;
+    if (f.type !== "todos" && t.type !== f.type) return false;
+    if (f.categoryId !== "todas" && t.category_id !== f.categoryId) return false;
+    if (f.accountId !== "todas" && t.account_id !== f.accountId) return false;
+    return true;
+  }).sort((a, b) => b.occurred_on.localeCompare(a.occurred_on) || b.created_at.localeCompare(a.created_at));
+}
+function renderMovimentacoes() {
+  const tx = filteredTransactions();
+  const catMap = new Map(state.data.categories.map(c => [c.id, c]));
+  const accMap = new Map(state.data.accounts.map(a => [a.id, a]));
+
+  const filterBar = `
+    <div class="mb-5 flex flex-col gap-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="relative min-w-[200px] flex-1">
+          <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/35">${icon("search", 15)}</span>
+          <input value="${escapeHtml(state.filters.search)}" oninput="updateFilter('search', this.value)" placeholder="Pesquisar por descrição..." class="${CLS.input} pl-10" />
+        </div>
+        <button onclick="openTransactionModal()" class="${CLS.btnPrimary} shrink-0">${icon("plus", 15)}Nova</button>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <select onchange="updateFilter('type', this.value)" class="${CLS.input} w-auto py-2 text-sm">
+          <option value="todos" ${state.filters.type === "todos" ? "selected" : ""}>Todos os tipos</option>
+          <option value="receita" ${state.filters.type === "receita" ? "selected" : ""}>Receitas</option>
+          <option value="despesa" ${state.filters.type === "despesa" ? "selected" : ""}>Despesas</option>
+        </select>
+        <select onchange="updateFilter('categoryId', this.value)" class="${CLS.input} w-auto py-2 text-sm">
+          <option value="todas" ${state.filters.categoryId === "todas" ? "selected" : ""}>Todas as categorias</option>
+          ${state.data.categories.map(c => `<option value="${c.id}" ${state.filters.categoryId === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
+        </select>
+        <select onchange="updateFilter('accountId', this.value)" class="${CLS.input} w-auto py-2 text-sm">
+          <option value="todas" ${state.filters.accountId === "todas" ? "selected" : ""}>Todas as contas</option>
+          ${state.data.accounts.map(a => `<option value="${a.id}" ${state.filters.accountId === a.id ? "selected" : ""}>${escapeHtml(a.name)}</option>`).join("")}
+        </select>
+      </div>
+    </div>`;
+
+  const list = tx.length === 0
+    ? emptyState("swap", "Ainda não existem movimentações", "Adicione sua primeira receita ou despesa para começar a organizar suas finanças.", "Adicionar movimentação", "openTransactionModal()")
+    : `<div class="${CLS.card} overflow-hidden"><ul>${tx.map(t => {
+        const cat = t.category_id ? catMap.get(t.category_id) : null;
+        const acc = t.account_id ? accMap.get(t.account_id) : null;
+        return `<li class="flex items-center justify-between gap-3 border-b border-base-700/50 px-4 py-4 last:border-0 sm:px-6">
+          <div class="flex min-w-0 items-center gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${t.type === "receita" ? "bg-success/15 text-success" : "bg-danger/15 text-danger"}">${icon(t.type === "receita" ? "up" : "down", 16)}</div>
+            <div class="min-w-0">
+              <p class="truncate font-body text-sm font-medium text-ink/90">${escapeHtml(t.description)}</p>
+              <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                <span class="font-body text-xs text-ink/40">${formatDate(t.occurred_on)}</span>
+                ${acc ? `<span class="font-body text-xs text-ink/40">· ${escapeHtml(acc.name)}</span>` : ""}
+                ${cat ? `<span class="inline-flex items-center rounded-full px-2.5 py-0.5 font-body text-xs font-medium" style="background:${cat.color}22; color:${cat.color}">${escapeHtml(cat.name)}</span>` : `<span class="inline-flex items-center rounded-full border border-base-600 px-2.5 py-0.5 font-body text-xs text-ink/40">Sem categoria</span>`}
+              </div>
+            </div>
+          </div>
+          <div class="flex shrink-0 items-center gap-3">
+            <span class="font-display text-sm font-bold ${t.type === "receita" ? "text-success" : "text-danger"}">${t.type === "receita" ? "+" : "-"} ${formatCurrency(t.amount)}</span>
+            <button onclick="openTransactionModal('${t.id}')" class="${CLS.iconBtn}" aria-label="Editar">${icon("edit", 15)}</button>
+            <button onclick="confirmDeleteTransaction('${t.id}', '${esc1(t.description)}')" class="${CLS.iconBtnDanger}" aria-label="Excluir">${icon("trash", 15)}</button>
+          </div>
+        </li>`;
+      }).join("")}</ul></div>`;
+
+  return `${pageHeader("Movimentações", "Todas as suas receitas e despesas em um só lugar.")}${filterBar}${list}`;
+}
+function updateFilter(key, value) { state.filters[key] = value; renderApp(); }
+
+/* ============================================================================
+   RENDER — METAS
+   ============================================================================ */
+function renderMetas() {
+  const goals = state.data.goals;
+  const list = goals.length === 0
+    ? emptyState("target", "Ainda não existem metas", "Crie sua primeira meta financeira e acompanhe o progresso até alcançá-la.", "Criar meta", "openGoalModal()")
+    : `<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">${goals.map(g => {
+        const progress = Math.min(100, Math.round((Number(g.current_amount) / Number(g.target_amount)) * 100));
+        return `<div class="${CLS.card} ${CLS.cardHover} p-5 sm:p-6">
+          <div class="mb-4 flex items-start justify-between">
+            <div><h3 class="font-display text-base font-bold">${escapeHtml(g.name)}</h3>${g.due_date ? `<p class="mt-0.5 font-body text-xs text-ink/40">Até ${formatDateLong(g.due_date)}</p>` : ""}</div>
+            <div class="flex gap-1">
+              <button onclick="openGoalModal('${g.id}')" class="${CLS.iconBtn}" aria-label="Editar">${icon("edit", 15)}</button>
+              <button onclick="confirmDeleteGoal('${g.id}', '${esc1(g.name)}')" class="${CLS.iconBtnDanger}" aria-label="Excluir">${icon("trash", 15)}</button>
+            </div>
+          </div>
+          <div class="mb-2 flex items-baseline justify-between">
+            <span class="font-display text-xl font-bold">${formatCurrency(g.current_amount)}</span>
+            <span class="font-body text-sm text-ink/40">de ${formatCurrency(g.target_amount)}</span>
+          </div>
+          <div class="mb-4 h-2 w-full overflow-hidden rounded-full bg-base-700"><div class="h-full rounded-full bg-neon-500 transition-all duration-500" style="width:${progress}%"></div></div>
+          <div class="flex items-center justify-between">
+            <span class="font-body text-xs font-medium text-neon-600 dark:text-neon-400">${progress}% concluído</span>
+            <button onclick="openAddToGoalModal('${g.id}')" class="flex items-center gap-1 font-body text-xs font-semibold text-ink/70 hover:text-ink">${icon("plus", 13)}Adicionar</button>
+          </div>
+        </div>`;
+      }).join("")}</div>`;
+
+  return `${pageHeader("Metas", "Defina objetivos e acompanhe seu progresso.")}
+    <div class="mb-5 flex justify-end"><button onclick="openGoalModal()" class="${CLS.btnPrimary}">${icon("plus", 15)}Nova meta</button></div>
+    ${list}`;
+}
+
+/* ============================================================================
+   RENDER — CONTAS
+   ============================================================================ */
+const ACCOUNT_ICON = { dinheiro: "cash", banco: "landmark", cartao: "card", carteira: "wallet", investimentos: "up" };
+const ACCOUNT_LABEL = { dinheiro: "Dinheiro", banco: "Conta bancária", cartao: "Cartão", carteira: "Carteira digital", investimentos: "Investimentos" };
+function renderContas() {
+  const accounts = state.data.accounts;
+  const total = accounts.reduce((s, a) => s + Number(a.initial_balance), 0);
+  const list = accounts.length === 0
+    ? emptyState("landmark", "Ainda não existem contas", "Cadastre suas contas para organizar de onde vem e para onde vai o seu dinheiro.", "Adicionar conta", "openAccountModal()")
+    : `<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">${accounts.map(a => `
+        <div class="${CLS.card} ${CLS.cardHover} p-5 sm:p-6">
+          <div class="mb-4 flex items-start justify-between">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-neon-500/13 text-neon-600 dark:text-neon-400">${icon(ACCOUNT_ICON[a.type], 18)}</div>
+            <div class="flex gap-1">
+              <button onclick="openAccountModal('${a.id}')" class="${CLS.iconBtn}" aria-label="Editar">${icon("edit", 15)}</button>
+              <button onclick="confirmDeleteAccount('${a.id}', '${esc1(a.name)}')" class="${CLS.iconBtnDanger}" aria-label="Excluir">${icon("trash", 15)}</button>
+            </div>
+          </div>
+          <p class="font-body text-xs text-ink/40">${ACCOUNT_LABEL[a.type]}</p>
+          <h3 class="mt-0.5 font-display text-base font-bold">${escapeHtml(a.name)}</h3>
+          <p class="mt-3 font-display text-xl font-bold">${formatCurrency(a.initial_balance)}</p>
+          ${a.description ? `<p class="mt-1 font-body text-xs text-ink/40">${escapeHtml(a.description)}</p>` : ""}
+        </div>`).join("")}</div>`;
+
+  return `${pageHeader("Contas", `Saldo geral: ${formatCurrency(total)}`)}
+    <div class="mb-5 flex justify-end"><button onclick="openAccountModal()" class="${CLS.btnPrimary}">${icon("plus", 15)}Nova conta</button></div>
+    ${list}`;
+}
+
+/* ============================================================================
+   RENDER — RECORRENTES
+   ============================================================================ */
+const FREQ_LABEL = { semanal: "Semanal", mensal: "Mensal", anual: "Anual" };
+const MONTHLY_FACTOR = { semanal: 4.33, mensal: 1, anual: 1 / 12 };
+function renderRecorrentes() {
+  const items = state.data.recurring;
+  const monthlyTotal = items.filter(i => i.active).reduce((s, i) => s + Number(i.amount) * MONTHLY_FACTOR[i.frequency], 0);
+  const list = items.length === 0
+    ? emptyState("repeat", "Nenhuma despesa recorrente", "Cadastre assinaturas e contas fixas para acompanhar quanto elas pesam no seu mês.", "Adicionar recorrência", "openRecurringModal()")
+    : `<div class="${CLS.card} overflow-hidden"><ul>${items.map(i => `
+        <li class="flex items-center justify-between gap-3 border-b border-base-700/50 px-4 py-4 last:border-0 sm:px-6">
+          <div class="min-w-0">
+            <p class="truncate font-body text-sm font-medium ${i.active ? "text-ink/90" : "text-ink/35 line-through"}">${escapeHtml(i.name)}</p>
+            <p class="mt-1 font-body text-xs text-ink/40">${FREQ_LABEL[i.frequency]} · próxima em ${formatDateLong(i.next_charge_date)}</p>
+          </div>
+          <div class="flex shrink-0 items-center gap-3">
+            <span class="font-display text-sm font-bold ${i.active ? "text-ink" : "text-ink/35"}">${formatCurrency(i.amount)}</span>
+            <button onclick="toggleRecurringActive('${i.id}')" class="rounded-lg p-1.5 ${i.active ? "text-success hover:bg-base-800" : "text-ink/30 hover:bg-base-800"}" aria-label="Pausar/ativar">${icon("power", 15)}</button>
+            <button onclick="openRecurringModal('${i.id}')" class="${CLS.iconBtn}" aria-label="Editar">${icon("edit", 15)}</button>
+            <button onclick="confirmDeleteRecurring('${i.id}', '${esc1(i.name)}')" class="${CLS.iconBtnDanger}" aria-label="Excluir">${icon("trash", 15)}</button>
+          </div>
+        </li>`).join("")}</ul></div>`;
+
+  return `${pageHeader("Recorrentes", `Você gasta ${formatCurrency(monthlyTotal)}/mês em recorrências ativas.`)}
+    <div class="mb-5 flex justify-end"><button onclick="openRecurringModal()" class="${CLS.btnPrimary}">${icon("plus", 15)}Nova recorrência</button></div>
+    ${list}`;
+}
+
+/* ============================================================================
+   RENDER — CARTÕES
+   ============================================================================ */
+function renderCartoes() {
+  const cards = state.data.cards;
+  const list = cards.length === 0
+    ? emptyState("card", "Nenhum cartão cadastrado", "Adicione seus cartões para acompanhar limite disponível e datas de fechamento.", "Adicionar cartão", "openCardModal()")
+    : `<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">${cards.map(c => {
+        const used = Number(c.used_amount), limit = Number(c.limit_amount);
+        const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+        const available = limit - used;
+        return `<div class="${CLS.card} ${CLS.cardHover} overflow-hidden p-5 sm:p-6">
+          <div class="mb-4 rounded-xl2 p-4" style="background:${c.color}18; border:1px solid ${c.color}33;">
+            <div class="mb-6 flex items-center justify-between">
+              <span style="color:${c.color}">${icon("card", 20)}</span>
+              <div class="flex gap-1">
+                <button onclick="openCardModal('${c.id}')" class="rounded-lg p-1 text-ink/50 hover:bg-black/10 hover:text-ink" aria-label="Editar">${icon("edit", 14)}</button>
+                <button onclick="confirmDeleteCard('${c.id}', '${esc1(c.name)}')" class="rounded-lg p-1 text-ink/50 hover:bg-black/10 hover:text-danger" aria-label="Excluir">${icon("trash", 14)}</button>
+              </div>
+            </div>
+            <p class="font-body text-sm font-medium text-ink/90">${escapeHtml(c.name)}</p>
+            <p class="mt-1 font-body text-xs text-ink/40">Fecha dia ${c.closing_day} · Vence dia ${c.due_day}</p>
+          </div>
+          <div class="mb-2 flex items-baseline justify-between">
+            <span class="font-display text-lg font-bold">${formatCurrency(used)}</span>
+            <span class="font-body text-xs text-ink/40">de ${formatCurrency(limit)}</span>
+          </div>
+          <div class="mb-2 h-2 w-full overflow-hidden rounded-full bg-base-700"><div class="h-full rounded-full transition-all duration-500" style="width:${pct}%; background:${pct > 85 ? "#ef4444" : c.color}"></div></div>
+          <p class="font-body text-xs text-ink/45">${formatCurrency(available)} disponível</p>
+        </div>`;
+      }).join("")}</div>`;
+
+  return `${pageHeader("Cartões", "Acompanhe o limite usado em cada cartão.")}
+    <div class="mb-5 flex justify-end"><button onclick="openCardModal()" class="${CLS.btnPrimary}">${icon("plus", 15)}Novo cartão</button></div>
+    ${list}`;
+}
+
+/* ============================================================================
+   RENDER — PERFIL
+   ============================================================================ */
+function renderPerfil() {
+  return `${pageHeader("Perfil", "Gerencie suas informações e seus dados.")}
+    <div class="${CLS.card} p-6 sm:p-8">
+      <div class="mb-6 flex items-center gap-4">
+        <div class="flex h-16 w-16 items-center justify-center rounded-full border border-base-600 bg-base-800 font-display text-xl font-bold text-ink/80 shadow-soft">${initials(state.data.profile.name)}</div>
+        <div>
+          <p class="font-body text-sm font-medium text-ink/90">${escapeHtml(state.data.profile.name || "Sem nome definido")}</p>
+          <p class="font-body text-xs text-ink/40">Dados salvos neste navegador</p>
+        </div>
+      </div>
+      <form onsubmit="submitProfileForm(event)" class="space-y-4">
+        <div><label class="${CLS.label}">Seu nome</label><input name="name" class="${CLS.input}" placeholder="Como podemos te chamar?" value="${escapeHtml(state.data.profile.name || "")}" /></div>
+        <button type="submit" class="${CLS.btnPrimary}">Salvar</button>
+      </form>
+    </div>
+
+    <div class="${CLS.card} mt-4 p-6 sm:p-8">
+      <h3 class="mb-1 font-display text-base font-bold">Backup dos seus dados</h3>
+      <p class="mb-4 font-body text-sm text-ink/50">Seus dados ficam salvos só neste navegador. Exporte um backup em JSON para guardar ou levar para outro dispositivo.</p>
+      <div class="flex flex-wrap gap-3">
+        <button onclick="exportData()" class="${CLS.btnSecondary}">${icon("download", 16)}Exportar dados</button>
+        <button onclick="triggerImport()" class="${CLS.btnSecondary}">${icon("upload", 16)}Importar dados</button>
+        <input type="file" id="import-file-input" accept="application/json" class="hidden" onchange="importData(event)" />
+      </div>
+    </div>
+
+    <div class="${CLS.card} mt-4 p-6 sm:p-8">
+      <h3 class="mb-1 font-display text-base font-bold text-danger">Apagar todos os dados</h3>
+      <p class="mb-4 font-body text-sm text-ink/50">Remove permanentemente tudo que você cadastrou neste navegador.</p>
+      <button onclick="confirmResetData()" class="${CLS.btnDanger}">${icon("trash", 16)}Apagar tudo</button>
+    </div>`;
+}
+
+/* ============================================================================
+   INICIALIZAÇÃO
+   ============================================================================ */
+renderApp();
+</script>
+</body>
+</html>
