@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node patch-numa.mjs",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "routes": [
+    { "src": "/access.html", "dest": "/access.html" },
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
+    { "src": "/api/gate", "dest": "/api/gate.js" },
+    { "src": "/(.*)", "dest": "/api/gate.js" }
+  ]
 }
